@@ -1,0 +1,834 @@
+# Logging parameters
+logging:
+  # Name which which the run will be logged
+  run_name: "193_tennis_v7_adain_style_multiresolution_backpropagated_decoder_40_300k_pretr_5k_patch_64_crop_align_style_64_skip_4_frl_0.0_rl_1.0_pl_0.1_kl_0.5e-5_norm_autolr_1e-4_div_0.0_al_0.0_spi_400_bs_8_obs_4_res_512_run_1"
+
+  # Directory where main results are saved
+  output_root: "results"
+  # Checkpoint directory
+  checkpoints_root: "checkpoints"
+
+# Dataset parameters
+data:
+  # Dataset path
+  data_root: "data/tennis_v7"
+  # Crop to apply to each frame [left_index, upper_index, right_index, lower_index]
+  crop: null
+  # Number of distinct actions present in the dataset
+  actions_count: 7
+  # True if ground truth annotations are available
+  ground_truth_available: True
+
+  # desired (width, height) of the input images
+  target_input_size: [512, 288]
+
+  # Multiplies the focal length in the dataset with this factor to account
+  # for changes in resolution during data processing
+  # E.g. halving resolution requires a multiplier of 0.5
+  # For tennis_v7 note that focal lengths in the dataset were computed assuming 996x560 images
+  focal_length_multiplier: 0.51417
+
+# Model parameters
+model:
+  # Class to use as model
+  architecture: "model.environment_model_multiresolution_backpropagated_decoder"
+
+  # Whether to apply activation to the nerf output
+  apply_activation: False
+
+  # Whether to fix intersecting region between dynamic models and static models
+  fix_object_overlaps: False  # No overlaps in Tennis
+
+  # Autoencoder model parameters
+  autoencoder:
+    # Class to use as model
+    architecture: "model.autoencoder_models.autoencoder_v8"
+    # Which weights to load
+    weights_filename: "checkpoints/40_autoencoder_tennis_v7_autoencoder_v8_feat_128_bott_3_levels_2_input_augm_pl_0.01_kl_0.000005_bs_20_res_512_run_1/checkpoint_300000_.pth.tar"
+
+    # Number of input features for the autoencoder
+    input_features: 3
+    # Number of features to use in the bottleneck
+    bottleneck_features: 128
+    # Number of blocks to use in the bottleneck
+    bottleneck_blocks: 3
+    # Number of layers to use for downsampling for each downsampling block.
+    # The encoded resolution will be a factor 1/2^downsampling_layers_count of the input resolution to the downsampling block
+    downsampling_layers_count: [2, 1]
+
+  # Number of static object models in the scene. Assumed to be in the initial positions
+  static_object_models: 2
+
+  # Whether to use the weighted or the uniform sampling strategy
+  use_weighted_sampling: True
+  # The weights for each object instance to use for sampling in case 'use_weighted_sampling' is True
+  sampling_weights: [0.55, 0.15, 0.15, 0.15]
+
+  # Configuration parameters for the parameter encoders of each object category
+  object_parameters_encoder:
+    - background:
+      # Which model to use to represent it
+      architecture: "model.static_object_parameters_encoder"
+      # Number of objects for which the model should make predictions
+      objects_count: 1
+
+      # Range of the possible object translations
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      translation_range: [[[-0.0, +0.0], [-0.0, +0.0], [-0.0, +0.0]]]
+      # Range of the possible object rotations in radians
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      rotation_range: [[[-0.0, +0.0], [-0.0, +0.0], [-0.0, +0.0]]]
+    - background_backplate:
+      # Which model to use to represent it
+      architecture: "model.static_object_parameters_encoder"
+      # Number of objects for which the model should make predictions
+      objects_count: 1
+
+      # Range of the possible object translations
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      translation_range: [[[-0.0, +0.0], [+20.085, +20.085], [-0.0, +0.0]]]
+      # Range of the possible object rotations in radians
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      rotation_range: [[[-0.0, +0.0], [-0.0, +0.0], [-0.0, +0.0]]]
+    - player_1:
+      # Which model to use to represent it
+      architecture: "model.classic_object_parameters_encoder"
+      # Number of objects for which the model should make predictions
+      objects_count: 1
+
+      # Range of the possible object translations
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      translation_range: [[[-7.5, +7.5], [-20.0, +0.0], [+0.01, +0.01]]]
+      # Range of the possible object rotations in radians
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      rotation_range: [[[-0.0, +0.0], [-0.0, +0.0], [-0.0, +0.0]]]
+    - player_2:
+      # Which model to use to represent it
+      architecture: "model.classic_object_parameters_encoder"
+      # Number of objects for which the model should make predictions
+      objects_count: 1
+
+      # Range of the possible object translations
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      translation_range: [[[-7.5, +7.5], [-0.0, +20.0], [+0.01, +0.01]]]
+      # Range of the possible object rotations in radians
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)] for each object
+      rotation_range: [[[-0.0, +0.0], [-0.0, +0.0], [-0.0, +0.0]]]
+
+
+  # Configuration for each of the objects composing the scene
+  object_models:
+    # Model for the background
+    - background:
+      # Which model to use to represent it
+      architecture: "model.nerf_models.ray_bending_style_nerf_model"
+      # Parameters for the bounding box where the object must be contained
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)]
+      bounding_box: [[-30.0, +30.0], [-40.0, +20.585], [-0.5, +0.0]]
+      # Number of points to sample during fine and coarse pass
+      positions_count_coarse: 4
+      positions_count_fine: 4
+      # Whether to use the fine network. If False, no fine network is created and used
+      use_fine: False
+
+      # The alpha value to return when a sample is taken outside the bounding box
+      empty_space_alpha: -3.5
+
+      # Minimum value allowed for z_near, position sampler is allowed to increase it if too small
+      z_near_min: 5.0
+      # Maximum value allowed for z_far, position sampler is allowed to reduce it if too large
+      z_far_max: 70.0
+
+      # Number of features in which to encode deformation
+      deformation_features: 32
+      # Number of features used for style encoding
+      style_features: 64
+
+      # Parameters for the underlying nerf model
+      nerf_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.adain_style_nerf_model"
+        # Width of the fc layers
+        layers_width: 256
+        # Number of fc layers in the backbone
+        backbone_layers_count: 8
+        # Number of output features
+        output_features: 192
+        # Idx of the layer that has the original positions as an additional input
+        skip_layer_idx: 4
+        # Parameters for the encoder of the input position
+        position_encoder:
+          # Number of octaves to produce
+          octaves: 10
+          # Whether the non encoded input is concatenated to the encoded input
+          append_original: True
+        # Parameters for the encoder of style conditioned on the position
+        positional_style_encoder:
+          # Number of fc layers in the backbone
+          backbone_layers_count: 2
+          # Width of the fc layers
+          layers_width: 128
+
+      # Parameters for the underlying ray bending model
+      ray_bender_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.zeroed_ray_bender_model"
+
+    # Model for the background
+    - background_backplate:
+      # Which model to use to represent it
+      architecture: "model.nerf_models.ray_bending_style_nerf_model"
+      # Parameters for the bounding box where the object must be contained
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)]
+      bounding_box: [[-30.0, +30.0], [0.0, 0.5], [-0.0, +30.0]]
+      # Number of points to sample during fine and coarse pass
+      positions_count_coarse: 4
+      positions_count_fine: 4
+      # Whether to use the fine network. If False, no fine network is created and used
+      use_fine: False
+
+      # The alpha value to return when a sample is taken outside the bounding box
+      empty_space_alpha: -3.5
+
+      # Minimum value allowed for z_near, position sampler is allowed to increase it if too small
+      z_near_min: 5.0
+      # Maximum value allowed for z_far, position sampler is allowed to reduce it if too large
+      z_far_max: 70.0
+
+      # Number of features in which to encode deformation
+      deformation_features: 32
+      # Number of features used for style encoding
+      style_features: 64
+
+      # Parameters for the underlying nerf model
+      nerf_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.adain_style_nerf_model"
+        # Width of the fc layers
+        layers_width: 256
+        # Number of fc layers in the backbone
+        backbone_layers_count: 8
+        # Number of output features
+        output_features: 192
+        # Idx of the layer that has the original positions as an additional input
+        skip_layer_idx: 4
+        # Parameters for the encoder of the input position
+        position_encoder:
+          # Number of octaves to produce
+          octaves: 10
+          # Whether the non encoded input is concatenated to the encoded input
+          append_original: True
+        # Parameters for the encoder of style conditioned on the position
+        positional_style_encoder:
+          # Number of fc layers in the backbone
+          backbone_layers_count: 2
+          # Width of the fc layers
+          layers_width: 128
+
+      # Parameters for the underlying ray bending model
+      ray_bender_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.zeroed_ray_bender_model"
+
+    # Models for the players
+    - player_1:
+      # Which model to use to represent it
+      architecture: "model.nerf_models.ray_bending_style_nerf_model"
+      # Parameters for the bounding box where the object must be contained
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)]
+      bounding_box: [[-0.75, +0.75], [-0.5, +0.5], [-0.0, +2.15]]
+      # Number of points to sample during fine and coarse pass
+      positions_count_coarse: 32
+      positions_count_fine: 32
+      # Whether to use the fine network. If False, no fine network is created and used
+      use_fine: False
+
+      # The alpha value to return when a sample is taken outside the bounding box
+      empty_space_alpha: -3.5
+
+      # Minimum value allowed for z_near, position sampler is allowed to increase it if too small
+      z_near_min: 5.0
+      # Maximum value allowed for z_far, position sampler is allowed to reduce it if too large
+      z_far_max: 70.0
+
+      # Number of features in which to encode deformation
+      deformation_features: 32
+      # Number of features used for style encoding
+      style_features: 64
+
+      # Parameters for the underlying nerf model
+      nerf_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.adain_style_nerf_model"
+        # Width of the fc layers
+        layers_width: 256
+        # Number of fc layers in the backbone
+        backbone_layers_count: 8
+        # Number of output features
+        output_features: 192
+        # Idx of the layer that has the original positions as an additional input
+        skip_layer_idx: 4
+        # Parameters for the encoder of the input position
+        position_encoder:
+          # Number of octaves to produce
+          octaves: 10
+          # Whether the non encoded input is concatenated to the encoded input
+          append_original: True
+        # Parameters for the encoder of style conditioned on the position
+        positional_style_encoder:
+          # Number of fc layers in the backbone
+          backbone_layers_count: 2
+          # Width of the fc layers
+          layers_width: 128
+
+      # Parameters for the underlying ray bending model
+      ray_bender_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.positional_ray_bender_model"
+        # Width of the fc layers
+        layers_width: 128
+        # Number of fc layers in the backbone
+        layers_count: 6
+        # Idx of the layer that has the original positions as an additional input
+        skip_layer_idx: 3
+        # Parameters for the encoder of the input position
+        position_encoder:
+          # Number of octaves to produce
+          octaves: 6
+          # Whether the non encoded input is concatenated to the encoded input
+          append_original: True
+          # Number of steps in which to perform the annealing for the positional encodings
+          num_steps: 60000
+
+    - player_2:
+      # Which model to use to represent it
+      architecture: "model.nerf_models.ray_bending_style_nerf_model"
+      # Parameters for the bounding box where the object must be contained
+      # [(x_low, x_high), (y_low, y_high), (z_low, z_high)]
+      bounding_box: [[-0.75, +0.75], [-0.5, +0.5], [-0.0, +2.15]]
+      # Number of points to sample during fine and coarse pass
+      positions_count_coarse: 32
+      positions_count_fine: 32
+      # Whether to use the fine network. If False, no fine network is created and used
+      use_fine: False
+
+      # The alpha value to return when a sample is taken outside the bounding box
+      empty_space_alpha: -3.5
+
+      # Minimum value allowed for z_near, position sampler is allowed to increase it if too small
+      z_near_min: 5.0
+      # Maximum value allowed for z_far, position sampler is allowed to reduce it if too large
+      z_far_max: 70.0
+
+      # Number of features in which to encode deformation
+      deformation_features: 32
+      # Number of features used for style encoding
+      style_features: 64
+
+      # Parameters for the underlying nerf model
+      nerf_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.adain_style_nerf_model"
+        # Width of the fc layers
+        layers_width: 256
+        # Number of fc layers in the backbone
+        backbone_layers_count: 8
+        # Number of output features
+        output_features: 192
+        # Idx of the layer that has the original positions as an additional input
+        skip_layer_idx: 4
+        # Parameters for the encoder of the input position
+        position_encoder:
+          # Number of octaves to produce
+          octaves: 10
+          # Whether the non encoded input is concatenated to the encoded input
+          append_original: True
+        # Parameters for the encoder of style conditioned on the position
+        positional_style_encoder:
+          # Number of fc layers in the backbone
+          backbone_layers_count: 2
+          # Width of the fc layers
+          layers_width: 128
+
+      # Parameters for the underlying ray bending model
+      ray_bender_model:
+        # Which model to use to represent it
+        architecture: "model.nerf_models.positional_ray_bender_model"
+        # Width of the fc layers
+        layers_width: 128
+        # Number of fc layers in the backbone
+        layers_count: 6
+        # Idx of the layer that has the original positions as an additional input
+        skip_layer_idx: 3
+        # Parameters for the encoder of the input position
+        position_encoder:
+          # Number of octaves to produce
+          octaves: 6
+          # Whether the non encoded input is concatenated to the encoded input
+          append_original: True
+          # Number of steps in which to perform the annealing for the positional encodings
+          num_steps: 60000
+
+  # Configuration for each of the object style encoder
+  object_encoders:
+    # Model for the background
+    - background:
+      # Which model to use to represent it
+      architecture: "model.object_encoder_v5"
+      # (height, width) Size at which to resize the input
+      input_size: [64, 256]
+      # Number of features in which to encode style
+      style_features: 64
+      # Number of features in which to encode deformation
+      deformation_features: 32
+    # Model for the background backplate
+    - background_backplate:
+      # Which model to use to represent it
+      architecture: "model.object_encoder_v5"
+      # (height, width) Size at which to resize the input
+      input_size: [32, 256]
+      # Number of features in which to encode style
+      style_features: 64
+      # Number of features in which to encode deformation
+      deformation_features: 32
+    # Model for the player
+    - player_1:
+      # Which model to use to represent it
+      architecture: "model.object_encoder_v4"
+      # (height, width) Size at which to resize the input
+      input_size: [64, 64]
+      # Number of features in which to encode style
+      style_features: 64
+      # Number of features in which to encode deformation
+      deformation_features: 32
+    - player_2:
+      # Which model to use to represent it
+      architecture: "model.object_encoder_v4"
+      # (height, width) Size at which to resize the input
+      input_size: [64, 64]
+      # Number of features in which to encode style
+      style_features: 64
+      # Number of features in which to encode deformation
+      deformation_features: 32
+
+playable_model:
+
+  # Class to use as model
+  architecture: "model.playable_environment_model"
+
+  # Configuration for each object animation model
+  object_animation_models:
+    # Model for the first player
+    - player_1:
+      # Which model to use to represent it
+      architecture: "model.object_animation_model"
+
+      # Number of features in which to encode style
+      style_features: 64
+      # Number of features in which to encode deformation
+      deformation_features: 32
+
+      # Number of actions to learn
+      actions_count: 7
+      # Dimensions for the learned action space
+      action_space_dimension: 5
+
+      # Whether to use hard gumbel sampling strategy
+      hard_gumbel: False
+      # Temperature to use in Gumbel-Softmax for action sampling
+      gumbel_temperature: 1.0
+
+      # Configuration for the dynamics network
+      dynamics_network:
+        # Which model to use to represent it
+        architecture: "model.dynamics_network"
+
+        # Number of hidden features to use
+        output_features: 128
+
+        # If True poses all rotations outputs to 0
+        force_rotations_zero: True
+        # If True poses all translations y outputs to 0
+        force_z_translations_zero: True
+
+
+      # Configuration for the action network
+      action_network:
+        # Which model to use to represent it
+        architecture: "model.action_network"
+
+        # Number of features to use in the embedding mlp
+        layers_width: 64
+        # Number of layers to use in the embedding mlp
+        layers_count: 3
+
+      # Centroid estimator parameters
+      centroid_estimator:
+        # Alpha value to use for computing the moving average
+        alpha: 0.1
+    # Model for the second player
+    - player_2:
+      # Which model to use to represent it
+      architecture: "model.object_animation_model"
+
+      # Number of features in which to encode style
+      style_features: 64
+      # Number of features in which to encode deformation
+      deformation_features: 32
+
+      # Number of actions to learn
+      actions_count: 7
+      # Dimensions for the learned action space
+      action_space_dimension: 5
+
+      # Whether to use hard gumbel sampling strategy
+      hard_gumbel: False
+      # Temperature to use in Gumbel-Softmax for action sampling
+      gumbel_temperature: 1.0
+
+      # Configuration for the dynamics network
+      dynamics_network:
+        # Which model to use to represent it
+        architecture: "model.dynamics_network"
+
+        # Number of hidden features to use
+        output_features: 128
+
+        # If True poses all rotations outputs to 0
+        force_rotations_zero: True
+        # If True poses all translations y outputs to 0
+        force_z_translations_zero: True
+
+      # Configuration for the action network
+      action_network:
+        # Which model to use to represent it
+        architecture: "model.action_network"
+
+        # Number of features to use in the embedding mlp
+        layers_width: 64
+        # Number of layers to use in the embedding mlp
+        layers_count: 3
+
+      # Centroid estimator parameters
+      centroid_estimator:
+        # Alpha value to use for computing the moving average
+        alpha: 0.1
+
+
+# Training parameters
+training:
+
+  trainer: "training.trainer_multiresolution_backpropagated_decoder"
+
+  learning_rate: 0.0005
+  weight_decay: 0.0
+
+  # Learning rate for the autoencoder
+  autoencoder_learning_rate: 0.0001
+
+  # Number of steps every which to exponentially anneal the learning rate
+  lr_decay_iterations: 10000
+  # Gamma parameter for lr scheduling
+  lr_gamma: 0.926118
+  # Maximum number of steps for which to train the model
+  max_steps: 300000
+  # Interval in training steps at which to save the model
+  save_freq: 30000
+  # Maximum number of steps that can be performed at each epoch
+  max_steps_per_epoch: 750
+
+  # Number of steps between each logging
+  log_interval_steps: 10
+
+  # Number of steps in which to keep the autoencoder frozen
+  frozen_autoencoder_steps: 5000
+  # Number of rays to sample for each image
+  samples_per_image: 144
+  # Number of rays to sample for each image for the keypoint consistency loss
+  keypoint_consistency_samples_per_image: 75
+  # Whether to apply perturbations to samples
+  perturb: True
+  # Whether to shuffle style codes at different temporal points
+  shuffle_style: True
+
+  # Size of the patches in the feature space to reconstruct to use for training the pipeline
+  patch_size: 64
+  # Whether to align sampled rays to the center of the corresponding autoencoder features or to sample them randomly
+  # from corresponding pixel regions
+  align_grid: True
+  # Whether the losses should be computed only on the cropped region or on the whole image
+  crop_to_patch: True
+
+  # Parameters for batch building
+  batching:
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: [0]
+
+    batch_size: 8
+
+    # Number of observations that each batch sample possesses
+    observations_count: 4
+
+    # Number of frames to skip between each observation
+    skip_frames: 4
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 5
+
+  # Weights to use for the loss
+  loss_weights:
+    # Weight for the reconstruction loss
+    reconstruction_loss_lambda: 1.0
+    # Weight for the perceptual loss
+    perceptual_loss_lambda: 0.1
+    # Weight for the ray object distance loss
+    ray_object_distance_loss_lambda: 0.0
+    # Weight for the bounding box distance loss
+    bounding_box_loss_lambda: 0.0
+    # Weight for the loss on the magnitude of ray displacements
+    displacements_magnitude_loss_lambda: 0.0
+    # Weight for the loss on the divergence of the displacements rayfield
+    divergence_loss_lambda: 0.0
+    # Weight for the loss on the opacity of each ray
+    opacity_loss_lambda: 0.0
+    # Weight for the loss on object attention maps
+    attention_loss_lambda: 0.0
+    # Weight for the loss on sharpness
+    sharpness_loss_lambda: 0.0
+    # Mean of the gaussian to use in the sharpness loss
+    sharpness_loss_mean: 0.5
+    # Std of the gaussian to use in the sharpness loss
+    sharpness_loss_std: 0.15
+    # Weight for the loss on pose consistency
+    pose_consistency_loss_lambda: 0.0
+    # Weight for the loss on keypoint consistency
+    keypoint_consistency_loss_lambda: 0.0
+    # Threshold for the loss on keypoint consistency
+    keypoint_consistency_loss_threshold: 0.75
+    # Weight for the loss on keypoint opacity
+    keypoint_opacity_loss_lambda: 0.0
+    # Threshold for the loss on keypoint opacity
+    keypoint_opacity_loss_threshold: 0.75
+    # Weight for the autoencoder features reconstruction loss
+    autoencoder_features_reconstruction_loss_lambda: 0.0
+    # Type of loss to use for features reconstruction
+    autoencoder_features_reconstruction_loss_type: "l2"
+    # If True normalizes the loss by the magnitude of the encoder features
+    autoencoder_features_reconstruction_loss_normalize: True
+    # Weight for the latent space KL term in case of variational autoencoder
+    KL_loss_lambda: 0.000005
+
+# Playable model training parameters
+playable_model_training:
+
+  trainer: "training.playable_model_trainer"
+
+  learning_rate: 0.0005
+  weight_decay: 0.0
+
+  # Number of steps every which to exponentially anneal the learning rate
+  lr_decay_iterations: 10000
+  # Gamma parameter for lr scheduling
+  lr_gamma: 0.926118
+  # Maximum number of steps for which to train the model
+  max_steps: 300000
+  # Interval in training steps at which to save the model
+  save_freq: 10000
+  # Maximum number of steps that can be performed at each epoch
+  max_steps_per_epoch: 1500
+
+  # Number of ground truth observations in each sequence to use at the beginning of training
+  ground_truth_observations_start: 6
+  # Number of real observations in each sequence to use at the end of the annealing period
+  ground_truth_observations_end: 6
+  # Length in steps of the annealing period
+  ground_truth_observations_steps: 16000
+
+  # The alpha value to use for mutual information estimation smoothing
+  mutual_information_estimation_alpha: 0.2
+  # Lambda for entropy to use in the computation of the mutual information
+  mutual_information_entropy_lambda: 1.0
+
+  # Number of steps between each logging
+  log_interval_steps: 10
+
+  # Parameters for batch building
+  batching:
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: [0]
+
+    batch_size: 16
+
+    # Number of observations that each batch sample possesses
+    observations_count: 9
+    # Number of observations that the first batch possesses
+    observations_count_start: 7
+    # Length in steps of the annealing period
+    observations_count_steps: 25000
+
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 5
+
+  # Weights to use for the loss
+  loss_weights:
+    # Weight for the rotations reconstruction loss
+    rotations_rec_lambda: 1.0
+    # Weight for the tranlations reconstruction loss
+    translations_rec_lambda: 1.0
+    # Weight for the style reconstruction loss
+    style_rec_lambda: 1.0
+    # Weight for the deformation reconstruction loss
+    deformation_rec_lambda: 1.0
+    # Weight for the entropy loss
+    entropy_lambda: 0.0
+    # Weights for the action directions kl divergence loss
+    action_directions_kl_lambda: 0.0001
+    # Weights for the action mutual information loss
+    action_mutual_information_lambda: 0.15
+
+
+# Parameters for evaluation
+evaluation:
+
+  evaluator: "evaluation.evaluator"
+
+  # Minimum number of steps between two successive evaluations
+  eval_freq: 1500
+
+  # Parameters for extra cameras views for which to render results
+  extra_cameras:
+    # List for each cameras of [x, y, z] rotations in radians
+    camera_rotations: [[0.0, 0.0, 1.57]]
+    # List for each cameras of [x, y, z] translations
+    camera_translations: [[0.0, 0.0, 40.0]]
+    # List of camera focals for each camera
+    camera_focals: [1000.0]
+
+  # Parameters for batch building
+  batching:
+    batch_size: 1
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 2
+    # Number of frames to skip between each observation
+    skip_frames: 9
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 4
+
+  # Model to use to reconstruct the dataset
+  dataset_creator: "evaluation.reconstructed_dataset_creator"
+  # Model to use to evaluate the reconstructed dataset
+  dataset_reconstruction_evaluator: "evaluation.reconstructed_tennis_dataset_evaluator"
+
+  # Parameters for dataset reconstruction batch building
+  reconstructed_dataset_batching:
+    batch_size: 8
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 1
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 8
+
+  # Parameters for the evaluation procedure of dataset reconstruction batch building
+  reconstructed_dataset_evaluation_batching:
+    batch_size: 1
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 16
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 8
+
+  # Parameters for the evaluation procedure of noisy camera manipulations
+  reconstructed_noisy_camera_manipulation_dataset_batching:
+    batch_size: 1
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 16
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 8
+
+  camera_trajectory_creator:
+    # Standard deviation of the noise to apply to camera focals during noisy camera manipulations
+    focals_noise_std: 50.0
+    # Standard deviation of the noise to apply to camera rotations during noisy camera manipulations
+    rotations_noise_std: [0.0, 0.0, 0.0]
+    # Standard deviation of the noise to apply to camera translations during noisy camera manipulations
+    translations_noise_std: [1.5, 0.0, 0.5]
+    # Path where generated camera trajectories are stored
+    storage_path: "checkpoints/tennis_v7_test_camera_trajectories/storage.pkl"
+
+# Parameters for evaluation
+playable_model_evaluation:
+
+  evaluator: "evaluation.playable_model_evaluator"
+
+  # Minimum number of steps between two successive evaluations
+  eval_freq: 750
+
+  # Parameters for extra cameras views for which to render results
+  extra_cameras:
+    # List for each cameras of [x, y, z] rotations in radians
+    camera_rotations: [[1.3743, -0.4, -0.4], [0.0, 0.0, 1.57]]
+    # List for each cameras of [x, y, z] translations
+    camera_translations: [[-5.0, -39.54, 8.41], [0.0, 0.0, 40.0]]
+    # List of camera focals for each camera
+    camera_focals: [2280.0, 800.0]
+
+  # Parameters for batch building
+  batching:
+    batch_size: 1
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 16
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 4
+
+  # Parameters for dataset reconstruction batch building
+  reconstructed_dataset_batching:
+    batch_size: 1
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 16
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 8
+
+

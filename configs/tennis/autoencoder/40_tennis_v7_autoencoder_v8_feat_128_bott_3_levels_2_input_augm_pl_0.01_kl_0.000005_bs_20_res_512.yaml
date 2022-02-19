@@ -1,0 +1,180 @@
+# Logging parameters
+logging:
+  # Name which which the run will be logged
+  run_name: "40_autoencoder_tennis_v7_autoencoder_v8_feat_128_bott_3_levels_2_input_augm_pl_0.01_kl_0.000005_bs_20_res_512_run_1"
+
+  # Directory where main results are saved
+  output_root: "results"
+  # Checkpoint directory
+  checkpoints_root: "checkpoints"
+
+# Dataset parameters
+data:
+  # Dataset path
+  data_root: "data/tennis_v7"
+  # Crop to apply to each frame [left_index, upper_index, right_index, lower_index]
+  crop: [0, 0, 512, 288]
+  # Number of distinct actions present in the dataset
+  actions_count: 7
+  # True if ground truth annotations are available
+  ground_truth_available: True
+
+  # desired (width, height) of the input images
+  target_input_size: [512, 288]
+
+  # Multiplies the focal length in the dataset with this factor to account
+  # for changes in resolution during data processing
+  # E.g. halving resolution requires a multiplier of 0.5
+  # For tennis_v7 note that focal lengths in the dataset were computed assuming 996x560 images
+  focal_length_multiplier: 0.51417
+
+# Model parameters
+model:
+  # Class to use as model
+  architecture: "model.autoencoder_models.autoencoder_v8"
+
+  # Number of input features for the autoencoder
+  input_features: 3
+  # Number of features to use in the bottleneck
+  bottleneck_features: 128
+  # Number of blocks to use in the bottleneck
+  bottleneck_blocks: 3
+  # Number of layers to use for downsampling for each downsampling block.
+  # The encoded resolution will be a factor 1/2^downsampling_layers_count of the input resolution to the downsampling block
+  downsampling_layers_count: [2, 1]
+
+# Training parameters
+training:
+
+  trainer: "training.autoencoder.autoencoder_trainer"
+
+  learning_rate: 0.0005
+  weight_decay: 0.0
+
+  # Number of steps every which to exponentially anneal the learning rate
+  lr_decay_iterations: 10000
+  # Gamma parameter for lr scheduling
+  lr_gamma: 0.926118
+  # Maximum number of steps for which to train the model
+  max_steps: 300000
+  # Interval in training steps at which to save the model
+  save_freq: 30000
+  # Maximum number of steps that can be performed at each epoch
+  max_steps_per_epoch: 750
+
+  # Number of steps between each logging
+  log_interval_steps: 10
+
+  # Transformations to use on the input images
+  input_augmentation_trasformations_set: 1
+
+  # Transformations to use at the bottleneck
+  bottleneck_transforms:
+    # Probability of applying gaussian blur
+    gaussian_blur_probability: 0.0
+    # Size of the gaussian blur kernel
+    gaussian_blur_kernel: 0
+    # Sigma for the gaussian blur kernel
+    gaussian_blur_sigma: [0.5, 1.0]
+    # Probability of applying noise
+    noise_probability: 0.0
+    # Intensity of the noise to apply s.t.
+    # var(noise) = var(features) * intensity
+    noise_intensity: 0.9
+    # Probability with which to apply cutout
+    cutout_probability: 0.0
+    # Size of the holes to cut in the image
+    cutout_size: 2
+    # Minimum number of holes to cut
+    cutout_min_count: 10
+    # Maximum number of holes to cut
+    cutout_max_count: 200
+
+  # Parameters for batch building
+  batching:
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: [0]
+
+    batch_size: 20
+
+    # Number of observations that each batch sample possesses
+    observations_count: 1
+
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 5
+
+  # Weights to use for the loss
+  loss_weights:
+    # Weight for the reconstruction loss
+    reconstruction_loss_lambda: 1.0
+    # Weight for the perceptual loss
+    perceptual_loss_lambda: 0.01
+    # Weight for the latent space KL term in case of variational autoencoder
+    KL_loss_lambda: 0.000005
+
+
+# Parameters for evaluation
+evaluation:
+
+  evaluator: "evaluation.autoencoder.autoencoder_evaluator"
+
+  # Minimum number of steps between two successive evaluations
+  eval_freq: 4500
+
+  # Maximum number of batches to use for evaluation
+  max_evaluation_batches: 50
+
+  # Transformations to use at the bottleneck
+  bottleneck_transforms:
+
+    # Probability of applying gaussian blur
+    - gaussian_blur_probability: 1.0
+      # Size of the gaussian blur kernel
+      gaussian_blur_kernel: 5
+      # Sigma for the gaussian blur kernel
+      gaussian_blur_sigma: [0.5, 1.0]
+      # Probability of applying noise
+      noise_probability: 1.0
+      # Intensity of the noise to apply s.t.
+      # var(noise) = var(features) * intensity
+      noise_intensity: 0.0
+    - gaussian_blur_probability: 0.0
+      # Size of the gaussian blur kernel
+      gaussian_blur_kernel: 0
+      # Sigma for the gaussian blur kernel
+      gaussian_blur_sigma: [0.5, 1.0]
+      # Probability of applying noise
+      noise_probability: 1.0
+      # Intensity of the noise to apply s.t.
+      # var(noise) = var(features) * intensity
+      noise_intensity: 0.0
+      # Probability with which to apply cutout
+      cutout_probability: 1.0
+      # Size of the holes to cut in the image
+      cutout_size: 2
+      # Minimum number of holes to cut
+      cutout_min_count: 10
+      # Maximum number of holes to cut
+      cutout_max_count: 50
+
+
+  # Parameters for batch building
+  batching:
+    batch_size: 5
+
+    # Indexes of the camera to use. null to use all cameras
+    allowed_cameras: null
+    # Number of observations that each batch sample possesses
+    observations_count: 5
+    # Number of frames to skip between each observation
+    skip_frames: 0
+    # Total number of frames that compose an observation
+    observation_stacking: 1
+    # Number of threads to use for dataloading
+    num_workers: 4
+
+
