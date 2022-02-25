@@ -7,7 +7,7 @@
 <br>
 
 > **Playable Environments: Video Manipulation in Space and Time**<br>
-> [Willi Menapace](https://www.willimenapace.com/), [Stéphane Lathuilière](https://stelat.eu/), [Sergey Tulyakov](http://www.stulyakov.com/), [Aliaksandr Siarohin](https://github.com/AliaksandrSiarohin), [Christian Theobalt](https://www.mpg.de/16583907/informatics-theobalt), [Vladislav Golyanik](https://people.mpi-inf.mpg.de/~golyanik/), [Elisa Ricci](http://elisaricci.eu/) <br>
+> [Willi Menapace](https://www.willimenapace.com/), [Aliaksandr Siarohin](https://github.com/AliaksandrSiarohin), [Christian Theobalt](https://www.mpg.de/16583907/informatics-theobalt), [Vladislav Golyanik](https://people.mpi-inf.mpg.de/~golyanik/), [Sergey Tulyakov](http://www.stulyakov.com/), [Stéphane Lathuilière](https://stelat.eu/), [Elisa Ricci](http://elisaricci.eu/) <br>
 > **CVPR 2022**
 
 > Paper: [ArXiv Coming Soon]()<br>
