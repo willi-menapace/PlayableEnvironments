@@ -220,7 +220,16 @@ When loading completes, a window appears showing a randomly chosen frame from th
 With the appeared window focused, the user can specify the action by pressing the corresponding number on the keyboard. Successively, the user is prompted to specify an action in the range [1-7] for object 2.
 When the second action is issued, the next frame is produced by the model and shown in the window. The process repeats until the user presses key 0 on the keyboard which resets the process.
 
+# Citation
 
+```
+@InProceedings{Menapace2022PlayableEnvironments,
+    author    = {Menapace, Willi and Siarohin, Aliaksandr and Theobalt, Christian and Golyanik, Vladislav and Tulyakov, Sergey and Lathuilière, Stéphane and Ricci, Elisa},
+    title     = {Playable Environments: Video Manipulation in Space and Time},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    year      = {2022}
+}
+```
 
 
 
