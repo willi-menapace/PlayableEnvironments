@@ -3,10 +3,6 @@
 <p align="center">
     </em>
     <img src="./media/interactive_sequences.gif"/> <br />
-</p>
-
-<p align="center">
-    </em>
     <img src="./media/reconstructions.gif"/> <br />
 </p>
 <br>
