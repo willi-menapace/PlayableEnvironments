@@ -7,10 +7,10 @@
 <br>
 
 > **Playable Environments: Video Manipulation in Space and Time**<br>
-> [Willi Menapace](https://www.willimenapace.com/), [Aliaksandr Siarohin](https://github.com/AliaksandrSiarohin), [Christian Theobalt](https://www.mpg.de/16583907/informatics-theobalt), [Vladislav Golyanik](https://people.mpi-inf.mpg.de/~golyanik/), [Sergey Tulyakov](http://www.stulyakov.com/), [Stéphane Lathuilière](https://stelat.eu/), [Elisa Ricci](http://elisaricci.eu/) <br>
+> [Willi Menapace](https://www.willimenapace.com/), [Stéphane Lathuilière](https://stelat.eu/), [Aliaksandr Siarohin](https://github.com/AliaksandrSiarohin), [Christian Theobalt](https://www.mpg.de/16583907/informatics-theobalt), [Sergey Tulyakov](http://www.stulyakov.com/), [Vladislav Golyanik](https://people.mpi-inf.mpg.de/~golyanik/), [Elisa Ricci](http://elisaricci.eu/) <br>
 > **CVPR 2022**
 
-> Paper: [ArXiv](https://arxiv.org/abs/2203.01914)<br>
+> Paper: [ArXiv](https://arxiv.org/abs/2203.01914) <br>
 > Supplementary: [Website](https://willi-menapace.github.io/playable-environments-website/) <br>
 
 > **Abstract:** *We present Playable Environments - a new representation for interactive video generation and manipulation in space and time. With a single image at inference time, our novel framework allows the user to move objects in 3D while generating a video by providing a sequence of desired actions. The actions are learnt in an unsupervised manner. The camera can be controlled to get the desired viewpoint. Our method builds an environment state for each frame, which can be manipulated by our proposed action module and decoded back to the image space with volumetric rendering.
