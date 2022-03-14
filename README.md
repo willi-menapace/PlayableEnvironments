@@ -4,8 +4,7 @@
     </em>
     <img src="./media/interactive_sequences.gif"/> <br />
 </p>
-<br>
-<br>
+
 <p align="center">
     </em>
     <img src="./media/reconstructions.gif"/> <br />
