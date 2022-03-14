@@ -225,7 +225,7 @@ When the second action is issued, the next frame is produced by the model and sh
 
 ```
 @InProceedings{Menapace2022PlayableEnvironments,
-    author    = {Menapace, Willi and Siarohin, Aliaksandr and Theobalt, Christian and Golyanik, Vladislav and Tulyakov, Sergey and Lathuilière, Stéphane and Ricci, Elisa},
+    author    = {Menapace, Willi and Lathuilière, Stéphane and Siarohin, Aliaksandr and Theobalt, Christian and Tulyakov, Sergey and Golyanik, Vladislav and Ricci, Elisa},
     title     = {Playable Environments: Video Manipulation in Space and Time},
     booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
     year      = {2022}
