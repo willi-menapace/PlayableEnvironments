@@ -95,7 +95,7 @@ Pretrained models are available from [Google Drive](https://drive.google.com/dri
 
 To use the pretrained models download the shared folder and place the contents inside the `checkpoints` directory.
 
-#Training
+# Training
 
 The model is trained in 3 successive phasees:
 - **Phase 1**: Training of the feature renderer F
